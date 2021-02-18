@@ -1,5 +1,3 @@
-#[allow(dead_code)]
-
 use std::vec::Vec;
 use std::collections::BTreeMap;
 use std::str;
@@ -77,6 +75,7 @@ impl Parser {
                 b'<' => {
                     if input[self.pos+1] == b'/' {
                         Self::match_until(self, input, &vec![b'>']);
+                        Self::consume(self, input, b'>');
                         break;
                     }
                     else {
@@ -145,12 +144,18 @@ mod tests {
     fn parser_check_text(){
         let input = r#"abcd"#;
         let mut parser = Parser::new();
-        assert_eq!(&format!("{:?}", parser.parse(&input)), r#"Node { node: Text("abcd") }"#);
+        assert_eq!(format!("{:?}", parser.parse(&input)), r#"Node { node: Text("abcd") }"#);
     }
     #[test]
-    fn parser_check(){
+    fn parser_check_with_attributes(){
         let input = r#"<a id="something" class="something"></a>"#; 
         let mut parser = Parser::new();
-        assert_eq!(&format!("{:?}", parser.parse(&input)), r#"Node { node: Tag(TagNode { name: "a", children: [], attr: {"class": "something", "id": "something"} }) }"#);
+        assert_eq!(format!("{:?}", parser.parse(&input)), r#"Node { node: Tag(TagNode { name: "a", children: [], attr: {"class": "something", "id": "something"} }) }"#);
+    }
+    #[test]
+    fn children_test(){
+        let input = r#"<html><div></div><a></a></html>"#;
+        let mut parser = Parser::new();
+        assert_eq!(format!("{:?}", parser.parse(&input)), r#"Node { node: Tag(TagNode { name: "html", children: [Node { node: Tag(TagNode { name: "div", children: [], attr: {} }) }, Node { node: Tag(TagNode { name: "a", children: [], attr: {} }) }], attr: {} }) }"#);
     }
 }
